@@ -8,7 +8,9 @@ import org.example.expert.domain.comment.dto.response.CommentSaveResponse;
 import org.example.expert.domain.comment.service.CommentService;
 import org.example.expert.domain.common.annotation.Auth;
 import org.example.expert.domain.common.dto.AuthUser;
+import org.example.expert.domain.common.util.FieldValidator;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,8 +25,10 @@ public class CommentController {
     public ResponseEntity<CommentSaveResponse> saveComment(
             @Auth AuthUser authUser,
             @PathVariable long todoId,
-            @Valid @RequestBody CommentSaveRequest commentSaveRequest
+            @Valid @RequestBody CommentSaveRequest commentSaveRequest,
+            BindingResult result
     ) {
+        FieldValidator.validateFieldErrorAndThrow(result);
         return ResponseEntity.ok(commentService.saveComment(authUser, todoId, commentSaveRequest));
     }
 

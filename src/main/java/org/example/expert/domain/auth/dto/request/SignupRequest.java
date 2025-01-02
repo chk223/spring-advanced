@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SignupRequest {
 
-    @NotBlank @Email
+    @NotBlank @Email(message = "이메일")
     private String email;
-    @NotBlank
+    @NotBlank(message = "비밀번호")
     private String password;
-    @NotBlank
+    @NotBlank(message = "유저 역할")
     private String userRole;
 }

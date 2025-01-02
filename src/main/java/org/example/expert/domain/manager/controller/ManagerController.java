@@ -6,11 +6,13 @@ import lombok.RequiredArgsConstructor;
 import org.example.expert.config.JwtUtil;
 import org.example.expert.domain.common.annotation.Auth;
 import org.example.expert.domain.common.dto.AuthUser;
+import org.example.expert.domain.common.util.FieldValidator;
 import org.example.expert.domain.manager.dto.request.ManagerSaveRequest;
 import org.example.expert.domain.manager.dto.response.ManagerResponse;
 import org.example.expert.domain.manager.dto.response.ManagerSaveResponse;
 import org.example.expert.domain.manager.service.ManagerService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,8 +28,10 @@ public class ManagerController {
     public ResponseEntity<ManagerSaveResponse> saveManager(
             @Auth AuthUser authUser,
             @PathVariable long todoId,
-            @Valid @RequestBody ManagerSaveRequest managerSaveRequest
+            @Valid @RequestBody ManagerSaveRequest managerSaveRequest,
+            BindingResult result
     ) {
+        FieldValidator.validateFieldErrorAndThrow(result);
         return ResponseEntity.ok(managerService.saveManager(authUser, todoId, managerSaveRequest));
     }
 
