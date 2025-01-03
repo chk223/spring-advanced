@@ -27,9 +27,20 @@ public class AuthService {
 
     @Transactional
     public SignupResponse signup(SignupRequest signupRequest) {
-        if (userRepository.existsByEmail(signupRequest.getEmail())) {
-            throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.EMAIL_IS_DUPLICATED, ApiException.class);
-        }
+        validateEmailOrThrow(signupRequest);
+        String bearerToken = saveUserAndCreateToken(signupRequest);
+        return new SignupResponse(bearerToken);
+    }
+
+    public SigninResponse signin(SigninRequest signinRequest) {
+        User user = userRepository.findByEmail(signinRequest.getEmail()).orElseThrow(
+                () -> ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.USER_NOT_FOUND, ApiException.class));
+        validatePasswordOrThrow(signinRequest, user);
+        String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole());
+        return new SigninResponse(bearerToken);
+    }
+
+    private String saveUserAndCreateToken(SignupRequest signupRequest) {
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
         UserRole userRole = UserRole.of(signupRequest.getUserRole());
 
@@ -39,23 +50,18 @@ public class AuthService {
                 userRole
         );
         User savedUser = userRepository.save(newUser);
-
-        String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), userRole);
-
-        return new SignupResponse(bearerToken);
+        return jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), userRole);
     }
 
-    public SigninResponse signin(SigninRequest signinRequest) {
-        User user = userRepository.findByEmail(signinRequest.getEmail()).orElseThrow(
-                () -> ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.USER_NOT_FOUND, ApiException.class));
+    private void validateEmailOrThrow(SignupRequest signupRequest) {
+        if (userRepository.existsByEmail(signupRequest.getEmail())) {
+            throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.EMAIL_IS_DUPLICATED, ApiException.class);
+        }
+    }
 
-        // 로그인 시 이메일과 비밀번호가 일치하지 않을 경우 401을 반환합니다.
+    private void validatePasswordOrThrow(SigninRequest signinRequest, User user) {
         if (!passwordEncoder.matches(signinRequest.getPassword(), user.getPassword())) {
             throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.PASSWORD_IS_WRONG, ApiException.class);
         }
-
-        String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole());
-
-        return new SigninResponse(bearerToken);
     }
 }

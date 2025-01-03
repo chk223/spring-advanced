@@ -27,15 +27,13 @@ public class UserService {
 
     @Transactional
     public void changePassword(long userId, UserChangePasswordRequest userChangePasswordRequest) {
-        if (userChangePasswordRequest.getNewPassword().length() < 8 ||
-                !userChangePasswordRequest.getNewPassword().matches(".*\\d.*") ||
-                !userChangePasswordRequest.getNewPassword().matches(".*[A-Z].*")) {
-            throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.PASSWORD_FORM_NOT_MATCH, ApiException.class);
-        }
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.USER_NOT_FOUND, ApiException.class));
+        validateChangingPasswordOrThrow(userChangePasswordRequest, user);
+        user.changePassword(passwordEncoder.encode(userChangePasswordRequest.getNewPassword()));
+    }
 
+    private void validateChangingPasswordOrThrow(UserChangePasswordRequest userChangePasswordRequest, User user) {
         if (passwordEncoder.matches(userChangePasswordRequest.getNewPassword(), user.getPassword())) {
             throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.PASSWORD_MUST_CHANGE, ApiException.class);
         }
@@ -43,7 +41,5 @@ public class UserService {
         if (!passwordEncoder.matches(userChangePasswordRequest.getOldPassword(), user.getPassword())) {
             throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.PASSWORD_IS_WRONG, ApiException.class);
         }
-
-        user.changePassword(passwordEncoder.encode(userChangePasswordRequest.getNewPassword()));
     }
 }
