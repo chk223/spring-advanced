@@ -5,11 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.exception.ApiException;
+import org.example.expert.domain.common.exception.util.ErrorMessage;
 import org.example.expert.domain.manager.dto.request.ManagerSaveRequest;
 import org.example.expert.domain.manager.dto.response.ManagerResponse;
 import org.example.expert.domain.manager.dto.response.ManagerSaveResponse;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -40,14 +43,16 @@ class ManagerServiceTest {
     private ManagerService managerService;
 
     @Test
-    public void manager_목록_조회_시_Todo가_없다면_NPE_에러를_던진다() {
+    public void manager_목록_조회_시_Todo가_없다면_커스텀_에러를_던진다() {
         // given
         long todoId = 1L;
-        given(todoRepository.findById(todoId)).willReturn(Optional.empty());
+        when(todoRepository.findById(todoId)).thenReturn(Optional.empty());
 
-        // when & then
+        // when
         ApiException exception = assertThrows(ApiException.class, () -> managerService.getManagers(todoId));
-        assertEquals("todo 정보를 찾을 수 없습니다.", exception.getMessage());
+        //then
+        assertEquals(ErrorMessage.TODO_NOT_FOUND.getMessage(), exception.getMessage());
+        assertEquals(ErrorMessage.TODO_NOT_FOUND.getStatus(),exception.getStatus());
     }
 
     @Test
@@ -62,14 +67,15 @@ class ManagerServiceTest {
 
         ManagerSaveRequest managerSaveRequest = new ManagerSaveRequest(managerUserId);
 
-        given(todoRepository.findById(todoId)).willReturn(Optional.of(todo));
+        when(todoRepository.findById(todoId)).thenReturn(Optional.of(todo));
 
         // when & then
         ApiException exception = assertThrows(ApiException.class, () ->
             managerService.saveManager(authUser, todoId, managerSaveRequest)
         );
 
-        assertEquals("사용 권한이 없습니다.", exception.getMessage());
+        assertEquals(ErrorMessage.DIFFERENT_USER.getMessage(), exception.getMessage());
+        assertEquals(ErrorMessage.DIFFERENT_USER.getStatus(), exception.getStatus());
     }
 
     @Test // 테스트코드 샘플
@@ -83,8 +89,8 @@ class ManagerServiceTest {
         Manager mockManager = new Manager(todo.getUser(), todo);
         List<Manager> managerList = List.of(mockManager);
 
-        given(todoRepository.findById(todoId)).willReturn(Optional.of(todo));
-        given(managerRepository.findAllByTodoId(todoId)).willReturn(managerList);
+        when(todoRepository.findById(todoId)).thenReturn(Optional.of(todo));
+        when(managerRepository.findAllByTodoId(todoId)).thenReturn(managerList);
 
         // when
         List<ManagerResponse> managerResponses = managerService.getManagers(todoId);

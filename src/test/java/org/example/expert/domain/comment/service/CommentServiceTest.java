@@ -6,6 +6,7 @@ import org.example.expert.domain.comment.entity.Comment;
 import org.example.expert.domain.comment.repository.CommentRepository;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.exception.BaseException;
+import org.example.expert.domain.common.exception.util.ErrorMessage;
 import org.example.expert.domain.todo.entity.Todo;
 import org.example.expert.domain.todo.repository.TodoRepository;
 import org.example.expert.domain.user.entity.User;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
@@ -40,7 +42,7 @@ class CommentServiceTest {
         CommentSaveRequest request = new CommentSaveRequest("contents");
         AuthUser authUser = new AuthUser(1L, "email", UserRole.USER);
 
-        given(todoRepository.findById(anyLong())).willReturn(Optional.empty());
+        when(todoRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
         BaseException exception = assertThrows(BaseException.class, () -> {
@@ -48,7 +50,8 @@ class CommentServiceTest {
         });
 
         // then
-        assertEquals("Todo not found", exception.getMessage());
+        assertEquals(ErrorMessage.TODO_NOT_FOUND.getMessage(), exception.getMessage());
+        assertEquals(ErrorMessage.TODO_NOT_FOUND.getStatus(), exception.getStatus());
     }
 
     @Test
