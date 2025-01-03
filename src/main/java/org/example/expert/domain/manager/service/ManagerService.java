@@ -14,12 +14,10 @@ import org.example.expert.domain.manager.entity.Manager;
 import org.example.expert.domain.manager.repository.ManagerRepository;
 import org.example.expert.domain.todo.entity.Todo;
 import org.example.expert.domain.todo.repository.TodoRepository;
-import org.example.expert.domain.user.dto.response.UserResponse;
 import org.example.expert.domain.user.entity.User;
 import org.example.expert.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -36,25 +34,15 @@ public class ManagerService {
         User user = User.fromAuthUser(authUser);
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.TODO_NOT_FOUND, ApiException.class));
-
-        if (!ObjectUtils.nullSafeEquals(user.getId(), todo.getUser().getId())) {
-            throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.DIFFERENT_USER, ApiException.class);
-        }
-
+        todo.userIsWriterOrThrow(user);
         User managerUser = userRepository.findById(managerSaveRequest.getManagerUserId())
                 .orElseThrow(() -> ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.USER_NOT_FOUND, ApiException.class));
 
-        if (ObjectUtils.nullSafeEquals(user.getId(), managerUser.getId())) {
-            throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.SELF_MANAGER_IS_NOT_ALLOWED, ApiException.class);
-        }
-
+        user.isSameUserThenThrow(managerUser);
         Manager newManagerUser = new Manager(managerUser, todo);
         Manager savedManagerUser = managerRepository.save(newManagerUser);
 
-        return new ManagerSaveResponse(
-                savedManagerUser.getId(),
-                new UserResponse(managerUser.getId(), managerUser.getEmail())
-        );
+        return savedManagerUser.toSaveResponse(managerUser);
     }
 
     public List<ManagerResponse> getManagers(long todoId) {
@@ -66,10 +54,7 @@ public class ManagerService {
         List<ManagerResponse> dtoList = new ArrayList<>();
         for (Manager manager : managerList) {
             User user = manager.getUser();
-            dtoList.add(new ManagerResponse(
-                    manager.getId(),
-                    new UserResponse(user.getId(), user.getEmail())
-            ));
+            dtoList.add(manager.toResponse(user));
         }
         return dtoList;
     }
@@ -82,16 +67,12 @@ public class ManagerService {
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.TODO_NOT_FOUND, ApiException.class));
 
-        if (todo.getUser() == null || !ObjectUtils.nullSafeEquals(user.getId(), todo.getUser().getId())) {
-            throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.INVALID_USER_INFO, ApiException.class);
-        }
+        todo.userIsWriterOrThrow(user);
 
         Manager manager = managerRepository.findById(managerId)
                 .orElseThrow(() -> ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.MANAGER_NOT_FOUND, ApiException.class));
 
-        if (!ObjectUtils.nullSafeEquals(todo.getId(), manager.getTodo().getId())) {
-            throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.USER_NOT_MATCH, ApiException.class);
-        }
+        manager.isMyToDoOrThrow(todo);
 
         managerRepository.delete(manager);
     }

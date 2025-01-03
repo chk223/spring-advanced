@@ -41,13 +41,7 @@ public class TodoService {
         );
         Todo savedTodo = todoRepository.save(newTodo);
 
-        return new TodoSaveResponse(
-                savedTodo.getId(),
-                savedTodo.getTitle(),
-                savedTodo.getContents(),
-                weather,
-                new UserResponse(user.getId(), user.getEmail())
-        );
+        return savedTodo.toSaveResponse();
     }
 
     public Page<TodoResponse> getTodos(int page, int size) {
@@ -70,16 +64,6 @@ public class TodoService {
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.TODO_NOT_FOUND, ApiException.class));
 
-        User user = todo.getUser();
-
-        return new TodoResponse(
-                todo.getId(),
-                todo.getTitle(),
-                todo.getContents(),
-                todo.getWeather(),
-                new UserResponse(user.getId(), user.getEmail()),
-                todo.getCreatedAt(),
-                todo.getModifiedAt()
-        );
+        return todo.toResponse();
     }
 }

@@ -5,7 +5,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.expert.domain.comment.entity.Comment;
 import org.example.expert.domain.common.entity.Timestamped;
+import org.example.expert.domain.common.exception.ApiException;
+import org.example.expert.domain.common.exception.util.ErrorMessage;
+import org.example.expert.domain.common.exception.util.ExceptionGenerator;
 import org.example.expert.domain.manager.entity.Manager;
+import org.example.expert.domain.todo.dto.response.TodoResponse;
+import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
+import org.example.expert.domain.user.dto.response.UserResponse;
 import org.example.expert.domain.user.entity.User;
 
 import java.util.ArrayList;
@@ -44,5 +50,31 @@ public class Todo extends Timestamped {
     public void update(String title, String contents) {
         this.title = title;
         this.contents = contents;
+    }
+
+    public void userIsWriterOrThrow(User user) {
+        if(this.user == null || !this.user.getId().equals(user.getId())) throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.DIFFERENT_USER, ApiException.class);
+    }
+
+    public TodoResponse toResponse() {
+        return new TodoResponse(
+                id,
+                title,
+                contents,
+                weather,
+                new UserResponse(user.getId(), user.getEmail()),
+                getCreatedAt(),
+                getModifiedAt()
+        );
+    }
+
+    public TodoSaveResponse toSaveResponse() {
+        return new TodoSaveResponse(
+                id,
+                title,
+                contents,
+                weather,
+                new UserResponse(user.getId(), user.getEmail())
+        );
     }
 }

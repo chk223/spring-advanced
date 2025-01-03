@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.entity.Timestamped;
+import org.example.expert.domain.common.exception.ApiException;
+import org.example.expert.domain.common.exception.util.ErrorMessage;
+import org.example.expert.domain.common.exception.util.ExceptionGenerator;
 import org.example.expert.domain.user.enums.UserRole;
 
 @Getter
@@ -43,5 +46,9 @@ public class User extends Timestamped {
 
     public void updateRole(UserRole userRole) {
         this.userRole = userRole;
+    }
+
+    public void isSameUserThenThrow(User user) {
+        if(this.id.equals(user.getId())) throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.SELF_MANAGER_IS_NOT_ALLOWED, ApiException.class);
     }
 }
