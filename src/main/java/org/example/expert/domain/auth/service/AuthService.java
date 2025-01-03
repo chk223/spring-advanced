@@ -27,14 +27,11 @@ public class AuthService {
 
     @Transactional
     public SignupResponse signup(SignupRequest signupRequest) {
-
-        String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
-
-        UserRole userRole = UserRole.of(signupRequest.getUserRole());
-
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
             throw ExceptionGenerator.generateExceptionOrThrow(ErrorMessage.EMAIL_IS_DUPLICATED, ApiException.class);
         }
+        String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
+        UserRole userRole = UserRole.of(signupRequest.getUserRole());
 
         User newUser = new User(
                 signupRequest.getEmail(),
