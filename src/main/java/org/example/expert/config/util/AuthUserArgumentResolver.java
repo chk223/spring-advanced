@@ -1,4 +1,4 @@
-package org.example.expert.config;
+package org.example.expert.config.util;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.expert.domain.common.annotation.Auth;

@@ -1,16 +1,10 @@
 package org.example.expert.config;
 
-import org.junit.jupiter.api.Assertions;
+import org.example.expert.config.util.PasswordEncoder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mockito;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
